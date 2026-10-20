@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>2026 양평 사제동행 배구대회 - 배구 관리 시스템 (9인제 배구)</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              emerald: '#10b981',
+              dark: '#070b14',
+              surface: '#0f172a',
+              card: '#1e293b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-[#070b14] text-slate-100 min-h-screen flex flex-col antialiased selection:bg-emerald-500 selection:text-black">
+
+  <!-- ===========================
+       상단 글로벌 네비게이션 헤더
+       =========================== -->
+  <header class="sticky top-0 z-40 bg-[#0c1222]/90 backdrop-blur-md border-b border-slate-800/80 px-4 lg:px-8 py-3.5 shadow-xl">
+    <div class="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- 대회 로고 및 타이틀 -->
+      <div class="flex items-center space-x-3.5">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-emerald-600 to-amber-400 flex items-center justify-center shadow-lg shadow-emerald-500/20 text-slate-950">
+          <i data-lucide="volleyball" class="w-6 h-6 stroke-[2.2]"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-widest bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              OFFICIAL 9-MAN LEAGUE
+            </span>
+            <span class="text-xs text-slate-400 font-medium">물맑은 양평체육관</span>
+          </div>
+          <h1 class="text-lg lg:text-xl font-black text-white tracking-tight flex items-center">
+            2026 양평 사제동행 배구대회
+            <span class="text-xs font-semibold text-amber-400 ml-2 hidden sm:inline">리그 관리 시스템 (9인제)</span>
+          </h1>
+        </div>
+      </div>
+
+      <!-- 우측 빠른 액션 도구모음 -->
+      <div class="flex items-center space-x-2.5">
+        <!-- 음향 토글 -->
+        <button id="soundToggleBtn" onclick="toggleSound()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="호각/부저 사운드 토글">
+          <i id="soundIcon" data-lucide="volume-2" class="w-4 h-4 text-emerald-400"></i>
+        </button>
+
+        <!-- 대형 전광판 팝업 열기 -->
+        <button onclick="app.openDisplayWindow()" class="px-3.5 py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-slate-950 font-black text-xs hover:brightness-110 transition shadow-lg shadow-amber-500/20 flex items-center" title="체육관 대형 빔프로젝터/전광판 전용 화면">
+          <i data-lucide="tv" class="w-4 h-4 mr-1.5 stroke-[2.5]"></i>
+          <span>대형 전광판 뷰</span>
+        </button>
+
+        <!-- 데이터 백업/복원 -->
+        <button onclick="window.storageManager.exportToJson()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-slate-700 text-slate-300 hover:text-white transition border border-slate-700" title="데이터 JSON 백업">
+          <i data-lucide="download" class="w-4 h-4"></i>
+        </button>
+
+        <!-- 공식 리그 일정 리셋 (0:0 대기 상태 초기화) -->
+        <button onclick="app.resetOfficialLeagueSchedule()" class="p-2.5 rounded-xl bg-slate-800/80 hover:bg-rose-900/40 text-slate-400 hover:text-rose-400 transition border border-slate-700" title="공식 5경기 대기 상태로 초기화">
+          <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===========================
+       메인 탭 메뉴 바
+       =========================== -->
+  <nav class="bg-[#0b101d] border-b border-slate-800/90 px-4 lg:px-8 py-2 sticky top-[73px] z-30">
+    <div class="max-w-[1600px] mx-auto flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-1 scrollbar-none">
+      <button data-tab="dashboard" class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center whitespace-nowrap bg-emerald-500 text-slate-950 shadow-lg shadow-emerald-500/20 transition">
+        <i data-lucide="layout-dashboard" class="w-4 h-4 mr-1.5"></i>대시보드
+      </button>
+      <button data-tab="scoreboard" class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800 transition">
+        <i data-lucide="activity" class="w-4 h-4 mr-1.5"></i>실시간 점수판
+      </button>
+      <button data-tab="schedule" class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800 transition">
+        <i data-lucide="calendar" class="w-4 h-4 mr-1.5"></i>리그 일정 (5경기)
+      </button>
+      <button data-tab="standings" class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800 transition">
+        <i data-lucide="award" class="w-4 h-4 mr-1.5"></i>리그 순위표 & 결과
+      </button>
+      <button data-tab="teams" class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800 transition">
+        <i data-lucide="users" class="w-4 h-4 mr-1.5"></i>팀 및 선수 명단
+      </button>
+      <button data-tab="scoresheet" class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800 transition">
+        <i data-lucide="file-text" class="w-4 h-4 mr-1.5"></i>경기 기록지 인쇄
+      </button>
+      <button data-tab="settings" class="nav-tab-btn px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold flex items-center whitespace-nowrap text-slate-400 hover:text-white hover:bg-slate-800 transition">
+        <i data-lucide="settings" class="w-4 h-4 mr-1.5"></i>대회 설정
+      </button>
+    </div>
+  </nav>
+
+  <!-- ===========================
+       메인 컨텐츠 영역
+       =========================== -->
+  <main class="flex-1 max-w-[1600px] w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+    <!-- ==============================================
+         TAB 1: 대시보드 (Dashboard)
+         ============================================== -->
+    <section id="tab_dashboard" class="tab-content-section space-y-8">
+      <!-- 대회 상단 히어로 배너 -->
+      <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-emerald-950/60 via-slate-900 to-slate-900 border border-emerald-500/30 p-6 sm:p-8 shadow-2xl">
+        <div class="absolute -right-12 -top-12 opacity-10 pointer-events-none">
+          <i data-lucide="volleyball" class="w-64 h-64 text-emerald-400"></i>
+        </div>
+        <div class="relative z-10 max-w-2xl">
+          <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 mb-3">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 mr-2 animate-ping"></span> 9인제 배구 • 사제동행 • 여자부 • 남자부 풀리그전
+          </span>
+          <h2 class="text-2xl sm:text-3xl font-black text-white leading-tight">
+            스승과 제자가 하나 되는 열정의 스파이크!<br>
+            <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-amber-300 to-amber-400">2026 양평 사제동행 배구대회</span>
+          </h2>
+          <p class="text-sm text-slate-300 mt-2.5">
+            15:30 사제동행 특별전(교직원 vs 학생)을 시작으로 16:10 여자부 리그전, 17:00부터 남자부 3팀(1팀, 2팀, 3팀) 풀리그전이 진행됩니다.
+          </p>
+          <div class="mt-5 flex flex-wrap gap-3">
+            <button onclick="app.switchTab('scoreboard')" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm shadow-lg shadow-emerald-500/20 transition flex items-center">
+              <i data-lucide="play" class="w-4 h-4 mr-1.5 stroke-[2.5]"></i> 점수판 바로가기
+            </button>
+            <button onclick="app.openDisplayWindow()" class="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-amber-400 font-bold text-sm border border-slate-700 transition flex items-center">
+              <i data-lucide="tv" class="w-4 h-4 mr-1.5"></i> 대형 전광판 띄우기
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- 요약 지표 카드 4종 -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800/90 shadow-lg">
+          <div class="flex items-center justify-between text-slate-400 text-xs font-bold uppercase mb-2">
+            <span>참가 팀</span>
+            <i data-lucide="users" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div id="dashTotalTeams" class="text-2xl font-black text-white">7개 팀</div>
+          <span class="text-xs text-slate-400 mt-1 block">9인제 배구 팀 엔트리</span>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800/90 shadow-lg">
+          <div class="flex items-center justify-between text-slate-400 text-xs font-bold uppercase mb-2">
+            <span>공식 경기</span>
+            <i data-lucide="calendar" class="w-4 h-4 text-blue-400"></i>
+          </div>
+          <div id="dashTotalMatches" class="text-2xl font-black text-white">5경기</div>
+          <span class="text-xs text-slate-400 mt-1 block">15:30 ~ 18:20 릴레이 진행</span>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800/90 shadow-lg">
+          <div class="flex items-center justify-between text-slate-400 text-xs font-bold uppercase mb-2">
+            <span>진행 중인 경기</span>
+            <i data-lucide="activity" class="w-4 h-4 text-amber-400 animate-pulse"></i>
+          </div>
+          <div id="dashInProgressMatches" class="text-2xl font-black text-amber-400">0경기</div>
+          <span class="text-xs text-slate-400 mt-1 block">점수 클릭 시 LIVE 가동</span>
+        </div>
+
+        <div class="bg-slate-900/80 p-5 rounded-2xl border border-slate-800/90 shadow-lg">
+          <div class="flex items-center justify-between text-slate-400 text-xs font-bold uppercase mb-2">
+            <span>완료된 경기</span>
+            <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+          </div>
+          <div id="dashFinishedMatches" class="text-2xl font-black text-emerald-400">0경기</div>
+          <span class="text-xs text-slate-400 mt-1 block">순위표 실시간 집계</span>
+        </div>
+      </div>
+
+      <!-- 공식 리그 타임테이블 현황 -->
+      <div class="space-y-4">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-bold text-white flex items-center">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-2"></span>
+            공식 리그 경기 타임테이블 (총 5경기)
+          </h3>
+          <button onclick="app.switchTab('schedule')" class="text-xs font-bold text-emerald-400 hover:underline flex items-center">
+            전체 일정 보기 <i data-lucide="chevron-right" class="w-3.5 h-3.5 ml-0.5"></i>
+          </button>
+        </div>
+        <div id="dashLiveMatchesContainer" class="space-y-3"></div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         TAB 2: 실시간 스마트 점수판 (Scorekeeper)
+         ============================================== -->
+    <section id="tab_scoreboard" class="tab-content-section hidden space-y-6">
+      
+      <!-- 상단 컨트롤 툴바 -->
+      <div class="bg-slate-900/90 border border-slate-800 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-3 shadow-xl">
+        <div class="flex items-center space-x-3">
+          <span id="sbMatchDivision" class="px-3 py-1 rounded-lg text-xs font-black bg-blue-500/20 text-blue-300 border border-blue-500/40">
+            남자부 풀리그
+          </span>
+          <span id="sbMatchRound" class="text-xs font-bold text-white">남자부 1경기</span>
+          <span id="sbMatchCourt" class="text-xs text-slate-400">17:00</span>
+          
+          <span id="sbMatchStatusBadge" class="px-3 py-1 rounded-lg text-xs font-bold bg-slate-800 text-amber-300 border border-slate-700">
+            ⏳ 대기 중 (경기 시작 전)
+          </span>
+
+          <span id="sbCurrentSetNum" class="px-2.5 py-0.5 rounded-md text-xs font-mono font-bold bg-amber-500/20 text-amber-300 border border-amber-500/40">
+            1 SET
+          </span>
+          <span id="sbDeuceBadge" class="hidden px-2.5 py-0.5 rounded-md text-xs font-black bg-rose-600 text-white animate-pulse">
+            DEUCE (듀스 2점차 승부)
+          </span>
+        </div>
+
+        <div class="flex items-center space-x-2">
+          <div class="flex items-center space-x-1.5 bg-slate-950 px-3 py-1.5 rounded-xl border border-slate-800 font-mono text-sm text-slate-200">
+            <i data-lucide="clock" class="w-3.5 h-3.5 text-slate-400"></i>
+            <span id="matchTimerText">00:00</span>
+          </div>
+
+          <button id="timerToggleBtn" onclick="scoreboardController.toggleMatchTimer()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition flex items-center border border-slate-700">
+            <i data-lucide="play" class="w-3.5 h-3.5 mr-1"></i>타이머 시작
+          </button>
+
+          <button onclick="scoreboardController.flipCourt()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200 transition flex items-center" title="홈/어웨이 좌우 진영 변경 (단축키 C)">
+            <i data-lucide="arrow-left-right" class="w-3.5 h-3.5 mr-1"></i>코트체인지
+          </button>
+
+          <button onclick="window.soundSystem.playWhistle()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-emerald-400 transition flex items-center" title="심판 호각 소리 울리기">
+            <i data-lucide="volume-2" class="w-3.5 h-3.5 mr-1"></i>휘슬
+          </button>
+
+          <button onclick="scoreboardController.undo()" class="px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-rose-300 transition flex items-center" title="마지막 득점 되돌리기 (단축키 Z)">
+            <i data-lucide="undo-2" class="w-3.5 h-3.5 mr-1"></i>되돌리기
+          </button>
+        </div>
+      </div>
+
+      <!-- ==============================================
+           ★ 혁신 점수판 레이아웃: 점수판 카드가 절대 찌그러지지 않고 고정 폭 유지!
+           좌측 패널(w-72) + [좌측 점수판 w-[460px] 고정] + [우측 점수판 w-[460px] 고정] + 우측 패널(w-72)
+           ============================================== -->
+      <div class="w-full overflow-x-auto pb-4 pt-2">
+        <div class="flex items-start justify-center gap-5 min-w-max mx-auto px-2">
+          
+          <!-- [좌측 선수 명단 독립 패널] (점수판 왼쪽 옆 공간에 안착) -->
+          <div id="sbRosterSidePanel_left" class="hidden transition-all duration-300 shrink-0"></div>
+
+          <!-- 좌측 팀 점수판 카드 (너비 460px 고정, shrink-0으로 절대 찌그러지지 않음!) -->
+          <div class="w-[440px] sm:w-[460px] lg:w-[480px] shrink-0 bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl border-2 border-slate-800 p-6 sm:p-7 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+            <div id="sbColorBar_left" class="absolute top-0 left-0 right-0 h-2.5 bg-emerald-500"></div>
+
+            <!-- 상단 팀 헤더 & 선수 명단 열기 버튼 -->
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span id="sbServeBadge_left" class="hidden items-center text-xs font-black px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 animate-serve-pulse">
+                    <i data-lucide="volleyball" class="w-3.5 h-3.5 mr-1"></i> SERVICE (서브)
+                  </span>
+                  <span id="sbTeamSchool_left" class="text-xs text-slate-400 font-medium">소속</span>
+                </div>
+                <h3 id="sbTeamName_left" class="text-2xl sm:text-3xl font-black text-white mt-1 truncate max-w-[260px]">남교직원 1팀</h3>
+              </div>
+
+              <div class="flex flex-col items-end space-y-1.5">
+                <span id="sbSetsWon_left" class="inline-block px-3 py-1 rounded-lg bg-slate-800 text-emerald-400 font-black text-sm border border-slate-700">
+                  0 SET
+                </span>
+                <button id="sbRosterToggleBtn_left" onclick="scoreboardController.toggleRoster('left')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center border border-slate-700 shadow-sm whitespace-nowrap" title="점수판 옆 공간에 9인제 명단 펼치기">
+                  <i data-lucide="users" class="w-3.5 h-3.5 mr-1"></i> 선수 명단
+                </button>
+              </div>
+            </div>
+
+            <!-- 중앙 거대 스코어 숫자 (찌그러짐 없이 본래의 웅장한 가독성 보존) -->
+            <div class="py-10 text-center">
+              <div id="sbPoints_left" class="font-scoreboard text-8xl sm:text-9xl md:text-[135px] font-bold text-white tracking-tight glow-emerald select-none">
+                0
+              </div>
+            </div>
+
+            <!-- 하단 조작 컨트롤 -->
+            <div class="space-y-4">
+              <div class="grid grid-cols-4 gap-3">
+                <button onclick="scoreboardController.addPoint(scoreboardController.courtFlipped ? 'away' : 'home')" class="col-span-3 py-4 rounded-2xl bg-emerald-500 hover:bg-emerald-400 active:scale-[0.98] text-slate-950 font-black text-2xl shadow-xl shadow-emerald-500/25 transition flex items-center justify-center space-x-2">
+                  <i data-lucide="plus" class="w-6 h-6 stroke-[3]"></i>
+                  <span>득점 (+1)</span>
+                </button>
+                <button onclick="scoreboardController.subtractPoint(scoreboardController.courtFlipped ? 'away' : 'home')" class="col-span-1 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-300 font-bold text-base transition flex items-center justify-center" title="1점 취소">
+                  <i data-lucide="minus" class="w-5 h-5"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <div class="flex items-center space-x-3">
+                  <span class="text-xs text-slate-400 font-bold">작전타임:</span>
+                  <div id="sbTimeouts_left" class="flex items-center space-x-1.5"></div>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                  <button onclick="scoreboardController.startTimeOut(scoreboardController.courtFlipped ? 'away' : 'home')" class="px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 transition flex items-center">
+                    <i data-lucide="timer" class="w-3.5 h-3.5 mr-1"></i> 타임아웃
+                  </button>
+                  <button onclick="scoreboardController.toggleServer()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i> 서브변경
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 우측 팀 점수판 카드 (너비 460px 고정, shrink-0으로 절대 찌그러지지 않음!) -->
+          <div class="w-[440px] sm:w-[460px] lg:w-[480px] shrink-0 bg-gradient-to-b from-slate-900 to-slate-950 rounded-3xl border-2 border-slate-800 p-6 sm:p-7 flex flex-col justify-between shadow-2xl relative overflow-hidden group">
+            <div id="sbColorBar_right" class="absolute top-0 left-0 right-0 h-2.5 bg-blue-500"></div>
+
+            <!-- 상단 팀 헤더 & 선수 명단 열기 버튼 -->
+            <div class="flex items-start justify-between">
+              <div>
+                <div class="flex items-center space-x-2">
+                  <span id="sbServeBadge_right" class="hidden items-center text-xs font-black px-2.5 py-1 rounded-full bg-amber-400 text-slate-950 animate-serve-pulse">
+                    <i data-lucide="volleyball" class="w-3.5 h-3.5 mr-1"></i> SERVICE (서브)
+                  </span>
+                  <span id="sbTeamSchool_right" class="text-xs text-slate-400 font-medium">소속</span>
+                </div>
+                <h3 id="sbTeamName_right" class="text-2xl sm:text-3xl font-black text-white mt-1 truncate max-w-[260px]">남교직원 2팀</h3>
+              </div>
+
+              <div class="flex flex-col items-end space-y-1.5">
+                <span id="sbSetsWon_right" class="inline-block px-3 py-1 rounded-lg bg-slate-800 text-blue-400 font-black text-sm border border-slate-700">
+                  0 SET
+                </span>
+                <button id="sbRosterToggleBtn_right" onclick="scoreboardController.toggleRoster('right')" class="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition flex items-center border border-slate-700 shadow-sm whitespace-nowrap" title="점수판 옆 공간에 9인제 명단 펼치기">
+                  <i data-lucide="users" class="w-3.5 h-3.5 mr-1"></i> 선수 명단
+                </button>
+              </div>
+            </div>
+
+            <!-- 중앙 거대 스코어 숫자 (찌그러짐 없이 본래의 웅장한 가독성 보존) -->
+            <div class="py-10 text-center">
+              <div id="sbPoints_right" class="font-scoreboard text-8xl sm:text-9xl md:text-[135px] font-bold text-white tracking-tight glow-blue select-none">
+                0
+              </div>
+            </div>
+
+            <!-- 하단 조작 컨트롤 -->
+            <div class="space-y-4">
+              <div class="grid grid-cols-4 gap-3">
+                <button onclick="scoreboardController.addPoint(scoreboardController.courtFlipped ? 'home' : 'away')" class="col-span-3 py-4 rounded-2xl bg-blue-600 hover:bg-blue-500 active:scale-[0.98] text-white font-black text-2xl shadow-xl shadow-blue-600/25 transition flex items-center justify-center space-x-2">
+                  <i data-lucide="plus" class="w-6 h-6 stroke-[3]"></i>
+                  <span>득점 (+1)</span>
+                </button>
+                <button onclick="scoreboardController.subtractPoint(scoreboardController.courtFlipped ? 'home' : 'away')" class="col-span-1 py-4 rounded-2xl bg-slate-800 hover:bg-slate-700 active:scale-[0.98] text-slate-300 font-bold text-base transition flex items-center justify-center" title="1점 취소">
+                  <i data-lucide="minus" class="w-5 h-5"></i>
+                </button>
+              </div>
+
+              <div class="flex items-center justify-between pt-2 border-t border-slate-800">
+                <div class="flex items-center space-x-3">
+                  <span class="text-xs text-slate-400 font-bold">작전타임:</span>
+                  <div id="sbTimeouts_right" class="flex items-center space-x-1.5"></div>
+                </div>
+                
+                <div class="flex items-center space-x-2">
+                  <button onclick="scoreboardController.startTimeOut(scoreboardController.courtFlipped ? 'home' : 'away')" class="px-3.5 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 text-xs font-bold border border-amber-500/30 transition flex items-center">
+                    <i data-lucide="timer" class="w-3.5 h-3.5 mr-1"></i> 타임아웃
+                  </button>
+                  <button onclick="scoreboardController.toggleServer()" class="px-3.5 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold border border-slate-700 transition flex items-center">
+                    <i data-lucide="rotate-ccw" class="w-3.5 h-3.5 mr-1"></i> 서브변경
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- [우측 선수 명단 독립 패널] (점수판 오른쪽 옆 공간에 안착) -->
+          <div id="sbRosterSidePanel_right" class="hidden transition-all duration-300 shrink-0"></div>
+
+        </div>
+      </div>
+
+      <!-- 세트별 기록 요약 바 -->
+      <div id="sbSetHistoryContainer" class="bg-slate-900/60 p-4 rounded-2xl border border-slate-800 text-center"></div>
+
+      <!-- 키보드 단축키 안내 띠 -->
+      <div class="bg-slate-950/60 border border-slate-800/80 rounded-2xl p-4 flex flex-wrap items-center justify-around gap-4 text-xs text-slate-400">
+        <div class="flex items-center space-x-1.5">
+          <kbd class="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 font-mono font-bold">Q</kbd>
+          <span>좌측팀 +1</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <kbd class="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 font-mono font-bold">A</kbd>
+          <span>좌측팀 -1</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <kbd class="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 font-mono font-bold">P</kbd>
+          <span>우측팀 +1</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <kbd class="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 font-mono font-bold">L</kbd>
+          <span>우측팀 -1</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <kbd class="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 font-mono font-bold">Space</kbd>
+          <span>타이머 정지/재개</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <kbd class="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 font-mono font-bold">Z</kbd>
+          <span>되돌리기(Undo)</span>
+        </div>
+        <div class="flex items-center space-x-1.5">
+          <kbd class="px-2 py-1 rounded bg-slate-800 border border-slate-700 text-slate-200 font-mono font-bold">C</kbd>
+          <span>코트체인지</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==============================================
+         TAB 3: 경기 일정 및 결과 (Schedule)
+         ============================================== -->
+    <section id="tab_schedule" class="tab-content-section hidden space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white">공식 리그전 경기 일정 (총 5경기)</h2>
+          <p class="text-xs text-slate-400 mt-0.5">사제동행(15:30) ➔ 여자부(16:10) ➔ 남자부 3팀 풀리그(17:00 ~ 18:20)</p>
+        </div>
+        <div class="flex items-center space-x-2">
+          <button onclick="app.resetOfficialLeagueSchedule()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-400 font-bold text-xs border border-emerald-500/30 transition flex items-center">
+            <i data-lucide="rotate-ccw" class="w-4 h-4 mr-1.5"></i> 공식 일정 복원
+          </button>
+        </div>
+      </div>
+
+      <div id="scheduleMatchesContainer" class="space-y-4"></div>
+    </section>
+
+    <!-- ==============================================
+         TAB 4: 순위표 & 리그 결과 (Standings)
+         ============================================== -->
+    <section id="tab_standings" class="tab-content-section hidden space-y-8">
+      <div>
+        <h2 class="text-xl font-bold text-white">부문별 리그 순위표 및 경기 결과</h2>
+        <p class="text-xs text-slate-400 mt-0.5">배구 공식 승점제: 2-0 승리(3점) / 2-1 승리(2점) / 1-2 패배(1점) / 0-2 패배(0점)</p>
+      </div>
+
+      <!-- 1. 남자부 3팀 풀리그 공식 순위표 -->
+      <div class="bg-slate-900/80 rounded-3xl border border-slate-800 p-6 shadow-2xl space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-4">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="px-2.5 py-1 rounded-md text-xs font-black bg-blue-500/20 text-blue-300 border border-blue-500/30">
+                남자부 풀리그 (3팀)
+              </span>
+              <h3 class="font-black text-lg text-white">남교직원 1팀 • 2팀 • 3팀 공식 순위표</h3>
+            </div>
+            <p class="text-xs text-slate-400 mt-1">총 3경기 풀리그전(17:00, 17:40, 18:20) 결과에 따른 최종 랭킹</p>
+          </div>
+          <span class="text-xs font-bold text-amber-400 flex items-center">
+            <i data-lucide="trophy" class="w-4 h-4 mr-1 text-amber-400"></i> 리그 1위 우승
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="text-[11px] text-slate-400 uppercase bg-slate-950/60 border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-3 text-center">순위</th>
+                <th class="py-3 px-3">팀명</th>
+                <th class="py-3 px-2 text-center">경기</th>
+                <th class="py-3 px-2 text-center text-emerald-400 font-bold">승</th>
+                <th class="py-3 px-2 text-center text-rose-400 font-bold">패</th>
+                <th class="py-3 px-2 text-center text-amber-400 font-black">승점</th>
+                <th class="py-3 px-2 text-center">세트 득:실</th>
+                <th class="py-3 px-2 text-center">세트율</th>
+                <th class="py-3 px-2 text-center">점수 득:실</th>
+                <th class="py-3 px-2 text-center">점수율</th>
+              </tr>
+            </thead>
+            <tbody id="standingsTableMale"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- 2. 여자부 & 사제동행 결과 카드 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        
+        <!-- 여자부 리그 결과 -->
+        <div class="bg-slate-900/80 rounded-3xl border border-slate-800 p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <span class="px-2.5 py-1 rounded-md text-xs font-black bg-pink-500/20 text-pink-300 border border-pink-500/30">
+                여자부 리그
+              </span>
+              <h4 class="font-bold text-white text-base">여교직원 1팀 VS 여교직원 2팀</h4>
+            </div>
+            <span class="text-xs text-slate-400 font-mono">16:10</span>
+          </div>
+
+          <div id="femaleResultContainer"></div>
+        </div>
+
+        <!-- 사제동행 특별 매치 결과 -->
+        <div class="bg-slate-900/80 rounded-3xl border border-slate-800 p-6 space-y-4">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center space-x-2">
+              <span class="px-2.5 py-1 rounded-md text-xs font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                사제동행 매치
+              </span>
+              <h4 class="font-bold text-white text-base">교직원 연합팀 VS 학생 팀</h4>
+            </div>
+            <span class="text-xs text-slate-400 font-mono">15:30</span>
+          </div>
+
+          <div id="mixedResultContainer"></div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ==============================================
+         TAB 5: 팀 및 선수 명단 관리 (Teams)
+         ============================================== -->
+    <section id="tab_teams" class="tab-content-section hidden space-y-6">
+      <div class="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h2 class="text-xl font-bold text-white">참가 팀 및 9인제 선수 엔트리 명단</h2>
+          <p class="text-xs text-slate-400 mt-0.5">사제동행, 여자부, 남자부 9인제 배구 팀 로스터</p>
+        </div>
+        
+        <div class="flex items-center space-x-2">
+          <div class="flex items-center bg-slate-900 p-1 rounded-xl border border-slate-800 text-xs">
+            <button onclick="teamsManager.setDivisionFilter('all')" class="px-3 py-1.5 rounded-lg text-slate-300 hover:text-white">전체</button>
+            <button onclick="teamsManager.setDivisionFilter('male')" class="px-3 py-1.5 rounded-lg text-blue-300 hover:text-white font-bold">남자부</button>
+            <button onclick="teamsManager.setDivisionFilter('female')" class="px-3 py-1.5 rounded-lg text-pink-300 hover:text-white font-bold">여자부</button>
+            <button onclick="teamsManager.setDivisionFilter('mixed')" class="px-3 py-1.5 rounded-lg text-amber-300 hover:text-white font-bold">사제동행</button>
+          </div>
+
+          <button onclick="teamsManager.openEditModal()" class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs shadow-lg shadow-emerald-500/20 transition flex items-center">
+            <i data-lucide="user-plus" class="w-4 h-4 mr-1.5 stroke-[2.5]"></i> 새 9인제 팀/선수 추가
+          </button>
+        </div>
+      </div>
+
+      <div id="teamsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    </section>
+
+    <!-- ==============================================
+         TAB 6: 공식 경기 기록지 인쇄 (Scoresheet)
+         ============================================== -->
+    <section id="tab_scoresheet" class="tab-content-section hidden space-y-6">
+      <div class="no-print flex flex-wrap items-center justify-between gap-4 bg-slate-900/80 p-4 rounded-2xl border border-slate-800">
+        <div class="flex items-center space-x-3">
+          <span class="text-xs font-bold text-slate-400">출력할 경기 선택:</span>
+          <select id="scoresheetMatchSelect" onchange="app.updateScoresheetPreview()" class="bg-slate-800 border border-slate-700 text-white rounded-xl px-3 py-1.5 text-xs focus:outline-none focus:border-emerald-500"></select>
+        </div>
+        <button onclick="app.printScoresheet()" class="px-5 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition flex items-center shadow-lg shadow-emerald-500/20">
+          <i data-lucide="printer" class="w-4 h-4 mr-1.5 stroke-[2.5]"></i> 경기 기록지 인쇄 / PDF 저장
+        </button>
+      </div>
+
+      <div id="scoresheetPrintContainer"></div>
+    </section>
+
+    <!-- ==============================================
+         TAB 7: 대회 설정 (Settings)
+         ============================================== -->
+    <section id="tab_settings" class="tab-content-section hidden space-y-8 max-w-3xl mx-auto">
+      <div>
+        <h2 class="text-xl font-bold text-white">대회 규정 및 시스템 설정 (9인제 배구)</h2>
+        <p class="text-xs text-slate-400 mt-0.5">대회 명칭, 세트 점수 규정, 데이터 백업 및 복원</p>
+      </div>
+
+      <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-6 space-y-5">
+        <h3 class="text-sm font-bold text-emerald-400 uppercase tracking-wider">■ 대회 기본 정보</h3>
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">대회 공식 명칭</label>
+            <input type="text" id="cfgTournamentName" value="2026 양평 사제동행 배구대회" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">대회 일시</label>
+            <input type="text" id="cfgDate" value="2026년 10월 24일 (토)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">경기 장소</label>
+            <input type="text" id="cfgVenue" value="양평 물맑은체육관 메인코트" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">세트당 작전타임 (회)</label>
+            <input type="number" id="cfgMaxTimeouts" value="2" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium" />
+          </div>
+        </div>
+
+        <h3 class="text-sm font-bold text-amber-400 uppercase tracking-wider pt-4 border-t border-slate-800">■ 9인제 세트 점수 규정</h3>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+          <div>
+            <label class="block text-slate-400 mb-1">일반 세트 목표 점수 (1, 2세트)</label>
+            <input type="number" id="cfgSetPoints" value="21" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium" />
+          </div>
+          <div>
+            <label class="block text-slate-400 mb-1">최종 세트 점수 (3세트)</label>
+            <input type="number" id="cfgFinalSetPoints" value="15" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium" />
+          </div>
+        </div>
+
+        <div class="pt-4 flex justify-end">
+          <button onclick="saveSettingsForm()" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition">
+            설정 저장하기
+          </button>
+        </div>
+      </div>
+
+      <div class="bg-slate-900/80 rounded-2xl border border-slate-800 p-6 space-y-4">
+        <h3 class="text-sm font-bold text-blue-400 uppercase tracking-wider">■ 데이터 백업 및 복원</h3>
+        <p class="text-xs text-slate-400">
+          현재 등록된 9인제 선수 로스터 및 5경기 결과를 JSON 파일로 다운로드하거나 복원할 수 있습니다.
+        </p>
+
+        <div class="flex flex-wrap gap-3 pt-2">
+          <button onclick="window.storageManager.exportToJson()" class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white font-bold text-xs border border-slate-700 transition flex items-center">
+            <i data-lucide="download" class="w-4 h-4 mr-1.5"></i> 백업 파일 다운로드 (.json)
+          </button>
+
+          <label class="px-4 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-xs border border-slate-700 transition flex items-center cursor-pointer">
+            <i data-lucide="upload" class="w-4 h-4 mr-1.5"></i> 백업 파일 불러오기 (.json)
+            <input type="file" accept=".json" onchange="handleImportFile(event)" class="hidden" />
+          </label>
+
+          <button onclick="app.resetOfficialLeagueSchedule()" class="px-4 py-2.5 rounded-xl bg-rose-950/40 hover:bg-rose-900/50 text-rose-300 font-bold text-xs border border-rose-800/60 transition flex items-center">
+            <i data-lucide="rotate-ccw" class="w-4 h-4 mr-1.5"></i> 9인제 공식 리그 일정(5경기 대기상태)으로 리셋
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ===========================
+       푸터 (Footer) - 양평초등학교 강인한 제작자 표기
+       =========================== -->
+  <footer class="mt-auto border-t border-slate-800/80 bg-[#090d16] py-6 px-4 text-center text-xs text-slate-400">
+    <div class="max-w-[1600px] mx-auto flex flex-col sm:flex-row items-center justify-between gap-3">
+      <div class="flex items-center space-x-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span class="font-bold text-slate-300">2026 양평 사제동행 배구대회 관리 시스템</span>
+        <span class="text-slate-600 hidden sm:inline">•</span>
+        <span class="text-[11px] text-slate-400 hidden sm:inline">사제동행 매치 • 여자부 리그 • 남자부 3팀 풀리그 (9인제 배구)</span>
+      </div>
+      <div class="flex items-center space-x-2 text-[11px]">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 text-slate-400 shadow-sm">
+          시스템 제작 : <span class="text-slate-300 ml-1.5 font-bold">양평초등학교 강인한</span>
+        </span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ==============================================
+       모달들
+       ============================================== -->
+
+  <!-- 1. 타임아웃 모달 -->
+  <div id="timeoutModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="modal-content-animated bg-slate-900 border-2 border-amber-500/60 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl space-y-6">
+      <div class="w-16 h-16 rounded-2xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto border border-amber-500/40">
+        <i data-lucide="timer" class="w-8 h-8 animate-pulse"></i>
+      </div>
+      <div>
+        <h3 id="timeoutCallerText" class="text-xl font-black text-white">작전타임 (Time-out)</h3>
+        <p class="text-xs text-slate-400 mt-1">30초 휴식 및 작전 지시 시간</p>
+      </div>
+
+      <div id="timeoutTimerText" class="font-scoreboard text-8xl font-black text-amber-400 tracking-tight glow-gold">
+        30
+      </div>
+
+      <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden">
+        <div id="timeoutProgressBar" class="h-full bg-gradient-to-r from-amber-500 to-amber-300 transition-all duration-1000 ease-linear" style="width: 100%;"></div>
+      </div>
+
+      <button onclick="scoreboardController.closeTimeoutModal()" class="w-full py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-bold transition">
+        타임아웃 조기 종료
+      </button>
+    </div>
+  </div>
+
+  <!-- 2. 세트 승리 모달 -->
+  <div id="setWonModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="modal-content-animated bg-slate-900 border-2 border-emerald-500/60 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl space-y-5">
+      <div class="w-16 h-16 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center mx-auto border border-emerald-500/40">
+        <i data-lucide="flag" class="w-8 h-8"></i>
+      </div>
+      <div>
+        <h3 id="setWonTitle" class="text-lg font-bold text-slate-400">1세트 종료!</h3>
+        <h2 id="setWonTeamName" class="text-2xl font-black text-emerald-400 mt-1">팀 승리!</h2>
+        <div id="setWonScore" class="font-mono text-3xl font-black text-white mt-2">21 : 18</div>
+      </div>
+      <p class="text-xs text-slate-400">코트를 체인지하고 다음 세트를 준비합니다.</p>
+      <button id="setWonNextBtn" class="w-full py-3.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-sm transition shadow-lg shadow-emerald-500/20">
+        다음 세트 진행 (코트 체인지)
+      </button>
+    </div>
+  </div>
+
+  <!-- 3. 경기 최종 승리 모달 -->
+  <div id="matchWonModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/85 backdrop-blur-sm p-4">
+    <div class="modal-content-animated bg-gradient-to-b from-slate-900 to-slate-950 border-2 border-amber-500/70 rounded-3xl p-8 max-w-md w-full text-center shadow-2xl space-y-6">
+      <div class="w-20 h-20 rounded-3xl bg-amber-500/20 text-amber-400 flex items-center justify-center mx-auto border-2 border-amber-500/50 shadow-[0_0_30px_rgba(245,158,11,0.3)]">
+        <i data-lucide="trophy" class="w-10 h-10 animate-bounce"></i>
+      </div>
+      <div>
+        <span class="text-xs font-black uppercase tracking-widest text-amber-400">MATCH FINISHED</span>
+        <h2 id="matchWonTeamName" class="text-2xl font-black text-white mt-1">🏆 경기 승리!</h2>
+        <div id="matchWonFinalScore" class="font-mono text-xl font-bold text-amber-300 mt-2">최종 세트스코어 2 : 0</div>
+      </div>
+      <p class="text-xs text-slate-400">경기 결과가 리그 순위표에 자동 반영되었습니다.</p>
+      <button id="matchWonCloseBtn" class="w-full py-3.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black text-sm transition shadow-lg shadow-amber-500/25">
+        확인 및 순위표 보기
+      </button>
+    </div>
+  </div>
+
+  <!-- 4. 팀 및 9인제 선수 등록 모달 -->
+  <div id="teamModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="modal-content-animated bg-slate-900 border border-slate-700 rounded-3xl max-w-2xl w-full max-h-[90vh] flex flex-col shadow-2xl overflow-hidden">
+      <div class="p-5 border-b border-slate-800 flex items-center justify-between">
+        <h3 id="teamModalTitle" class="text-lg font-bold text-white">팀 및 9인제 선수 등록</h3>
+        <button onclick="teamsManager.closeModal()" class="text-slate-400 hover:text-white p-1">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="p-6 overflow-y-auto space-y-6">
+        <form id="teamForm" onsubmit="teamsManager.saveTeamForm(event)" class="space-y-5">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">팀 이름 *</label>
+              <input type="text" id="teamNameInput" placeholder="예: 남교직원 1팀" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:border-emerald-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">소속 / 기관 *</label>
+              <input type="text" id="schoolNameInput" placeholder="예: 양평 남교직원 1조" required class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:border-emerald-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">참가 부문 *</label>
+              <select id="divisionSelect" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:border-emerald-500 focus:outline-none">
+                <option value="male">남자부 (남교직원)</option>
+                <option value="female">여자부 (여교직원)</option>
+                <option value="mixed">사제동행 (교직원 vs 학생)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">대표 색상</label>
+              <input type="color" id="primaryColorInput" value="#059669" class="w-full h-9 bg-slate-800 border border-slate-700 rounded-xl p-1 cursor-pointer" />
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">대표자 / 주장</label>
+              <input type="text" id="headTeacherInput" placeholder="예: 조재현 (주장)" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:border-emerald-500 focus:outline-none" />
+            </div>
+            <div>
+              <label class="block text-slate-300 font-bold mb-1">연락처</label>
+              <input type="text" id="captainStudentInput" placeholder="예: 010-0000-0000" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white font-medium focus:border-emerald-500 focus:outline-none" />
+            </div>
+          </div>
+
+          <!-- 9인제 선수 엔트리 명단 등록 영역 -->
+          <div class="pt-4 border-t border-slate-800 space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <h4 class="text-xs font-bold text-slate-200">9인제 배구 선수 엔트리 (교직원 👨‍🏫 / 학생 🧑‍🎓)</h4>
+                <p class="text-[11px] text-slate-400">9인제 표준 포지션(전위좌·중·우, 중위좌·세터·중우, 후위좌·중·우) 선택</p>
+              </div>
+              <button type="button" onclick="teamsManager.addPlayerRow()" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-400 text-xs font-bold transition flex items-center">
+                <i data-lucide="plus" class="w-3.5 h-3.5 mr-1"></i> 선수 추가
+              </button>
+            </div>
+
+            <div class="overflow-x-auto max-h-60 overflow-y-auto">
+              <table class="w-full text-left text-xs">
+                <thead class="text-slate-400 bg-slate-950/70 sticky top-0">
+                  <tr>
+                    <th class="p-2 w-16 text-center">등번호</th>
+                    <th class="p-2">선수명</th>
+                    <th class="p-2 w-28">구분</th>
+                    <th class="p-2 w-36">9인제 포지션</th>
+                    <th class="p-2 w-10 text-center">삭제</th>
+                  </tr>
+                </thead>
+                <tbody id="playersTableBody"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div class="pt-4 border-t border-slate-800 flex justify-end space-x-2">
+            <button type="button" onclick="teamsManager.closeModal()" class="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold transition">
+              취소
+            </button>
+            <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black transition">
+              저장 완료
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. 경기 일정 수정 모달 -->
+  <div id="matchModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div class="modal-content-animated bg-slate-900 border border-slate-700 rounded-3xl max-w-md w-full p-6 shadow-2xl space-y-4">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <h3 class="text-base font-bold text-white">경기 정보 수정</h3>
+        <button onclick="app.closeMatchModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+
+      <form onsubmit="app.saveMatchForm(event)" class="space-y-4 text-xs">
+        <input type="hidden" id="editMatchId" />
+        <div>
+          <label class="block text-slate-300 font-bold mb-1">라운드 / 경기 명</label>
+          <input type="text" id="editMatchRound" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white" />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">코트</label>
+            <input type="text" id="editMatchCourt" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">경기 시간</label>
+            <input type="text" id="editMatchTime" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white" />
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">홈팀</label>
+            <select id="editMatchHomeTeam" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+          </div>
+          <div>
+            <label class="block text-slate-300 font-bold mb-1">원정팀</label>
+            <select id="editMatchAwayTeam" class="w-full bg-slate-800 border border-slate-700 rounded-xl px-3 py-2 text-white"></select>
+          </div>
+        </div>
+
+        <div class="pt-3 flex justify-end space-x-2 border-t border-slate-800">
+          <button type="button" onclick="app.closeMatchModal()" class="px-4 py-2 rounded-xl bg-slate-800 text-slate-300">취소</button>
+          <button type="submit" class="px-5 py-2 rounded-xl bg-emerald-500 text-slate-950 font-bold">수정 완료</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/sound.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/tournament.js"></script>
+  <script src="js/teams.js"></script>
+  <script src="js/scoreboard.js"></script>
+  <script src="js/app.js"></script>
+
+  <script>
+    function toggleSound() {
+      const isMuted = window.soundSystem.toggleMute();
+      const icon = document.getElementById('soundIcon');
+      if (icon) {
+        if (isMuted) {
+          icon.setAttribute('data-lucide', 'volume-x');
+          icon.classList.remove('text-emerald-400');
+          icon.classList.add('text-rose-400');
+        } else {
+          icon.setAttribute('data-lucide', 'volume-2');
+          icon.classList.add('text-emerald-400');
+          icon.classList.remove('text-rose-400');
+        }
+        if (window.lucide) window.lucide.createIcons();
+      }
+    }
+
+    function handleImportFile(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      window.storageManager.importFromJson(file, (success, msg) => {
+        alert(msg);
+        if (success) window.location.reload();
+      });
+    }
+
+    function saveSettingsForm() {
+      const data = window.storageManager.loadData();
+      data.settings.tournamentName = document.getElementById('cfgTournamentName').value;
+      data.settings.date = document.getElementById('cfgDate').value;
+      data.settings.venue = document.getElementById('cfgVenue').value;
+      data.settings.setPoints = parseInt(document.getElementById('cfgSetPoints').value, 10);
+      data.settings.finalSetPoints = parseInt(document.getElementById('cfgFinalSetPoints').value, 10);
+      data.settings.maxTimeouts = parseInt(document.getElementById('cfgMaxTimeouts').value, 10);
+      window.storageManager.saveData(data);
+      alert("대회 설정이 저장되었습니다.");
+    }
+  </script>
+</body>
+</html>

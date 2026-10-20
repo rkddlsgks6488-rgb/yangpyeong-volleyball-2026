@@ -1,0 +1,108 @@
+/* 2026 양평 사제동행 배구대회 - 커스텀 스타일 및 애니메이션 */
+
+@import url('https://fonts.googleapis.com/css2?family=Pretendard:wght@300;400;500;600;700;800;900&family=Teko:wght@500;600;700&display=swap');
+
+:root {
+  --color-primary: #10b981; /* 양평 에메랄드 그린 */
+  --color-accent: #f59e0b;  /* 열정 골드 */
+  --color-dark-bg: #090d16;
+  --color-dark-card: #0f172a;
+}
+
+body {
+  font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+  background-color: var(--color-dark-bg);
+  color: #f1f5f9;
+  overflow-x: hidden;
+}
+
+/* 디지털 스포츠 폰트 (전광판 점수용) */
+.font-scoreboard {
+  font-family: 'Teko', sans-serif;
+  letter-spacing: 0.05em;
+  line-height: 0.9;
+}
+
+/* 네온 글로우 효과 */
+.glow-gold {
+  text-shadow: 0 0 25px rgba(245, 158, 11, 0.6), 0 0 50px rgba(245, 158, 11, 0.3);
+}
+
+.glow-emerald {
+  text-shadow: 0 0 25px rgba(16, 185, 129, 0.6), 0 0 50px rgba(16, 185, 129, 0.3);
+}
+
+.glow-blue {
+  text-shadow: 0 0 25px rgba(37, 99, 235, 0.6), 0 0 50px rgba(37, 99, 235, 0.3);
+}
+
+/* 배구공 서브 펄스 애니메이션 */
+@keyframes serve-pulse {
+  0% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 4px #fbbf24); }
+  50% { transform: scale(1.18) rotate(15deg); filter: drop-shadow(0 0 16px #f59e0b); }
+  100% { transform: scale(1) rotate(0deg); filter: drop-shadow(0 0 4px #fbbf24); }
+}
+
+.animate-serve-pulse {
+  animation: serve-pulse 1.8s infinite ease-in-out;
+}
+
+/* 스크롤바 커스텀 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.6);
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+/* 모달 애니메이션 */
+@keyframes modal-fade-in {
+  from { opacity: 0; transform: scale(0.96); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+.modal-content-animated {
+  animation: modal-fade-in 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 인쇄용 CSS 최적화 (@media print) */
+@media print {
+  body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+  }
+  
+  header, nav, footer, .no-print, button, .modal-backdrop {
+    display: none !important;
+  }
+
+  .tab-content-section {
+    display: none !important;
+  }
+
+  #tab_scoresheet {
+    display: block !important;
+  }
+
+  .scoresheet-a4 {
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  @page {
+    size: A4 portrait;
+    margin: 1.5cm;
+  }
+}

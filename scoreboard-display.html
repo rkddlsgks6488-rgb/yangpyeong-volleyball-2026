@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="ko" class="dark h-full">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>대형 전광판 디스플레이 - 2026 양평 사제동행 배구대회</title>
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts & Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    body {
+      background-color: #030712;
+      user-select: none;
+    }
+    .led-digit {
+      font-family: 'Teko', sans-serif;
+      line-height: 0.85;
+      letter-spacing: -0.02em;
+    }
+  </style>
+</head>
+<body class="h-full flex flex-col text-slate-100 overflow-hidden">
+
+  <!-- 상단 전광판 탑바 -->
+  <header class="bg-slate-950/90 border-b border-slate-800/80 px-6 py-3 flex items-center justify-between">
+    <div class="flex items-center space-x-3">
+      <div class="w-8 h-8 rounded-xl bg-amber-500 flex items-center justify-center text-slate-950 font-black">
+        <i data-lucide="volleyball" class="w-5 h-5"></i>
+      </div>
+      <div>
+        <h1 class="text-sm font-black tracking-wider text-white uppercase">2026 양평 사제동행 배구대회</h1>
+        <div class="flex items-center space-x-2 text-[11px] text-slate-400">
+          <span id="dispMatchRound" class="text-amber-400 font-bold">남자부 리그 1경기</span>
+          <span>•</span>
+          <span id="dispMatchCourt">물맑은 메인코트 (17:00)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 중앙 세트 번호 및 듀스 표시 -->
+    <div class="flex items-center space-x-3">
+      <div id="dispSetNumber" class="px-5 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/50 font-black text-base tracking-widest">
+        SET 1
+      </div>
+      <div id="dispDeuceBadge" class="hidden px-4 py-1.5 rounded-xl bg-rose-600 text-white font-black text-sm tracking-wider animate-pulse">
+        DEUCE (듀스)
+      </div>
+    </div>
+
+    <!-- 우측 선수명단 토글 & 풀스크린 & 타이머 -->
+    <div class="flex items-center space-x-3">
+      <!-- 선수 명단 토글 버튼 (단축키 R) -->
+      <button id="dispRosterToggleBtn" onclick="toggleDisplayRoster()" class="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-xs font-bold text-slate-300 border border-slate-800 transition flex items-center" title="선수 명단 오버레이 (단축키 R)">
+        <i data-lucide="users" class="w-4 h-4 mr-1.5 text-emerald-400"></i>
+        <span>선수 명단</span>
+      </button>
+
+      <div class="font-mono text-base font-bold text-slate-300 bg-slate-900 px-3 py-1 rounded-xl border border-slate-800">
+        <span id="dispTimerText">00:00</span>
+      </div>
+      <button onclick="toggleFullscreen()" class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white transition" title="전체화면 (F11)">
+        <i data-lucide="maximize" class="w-5 h-5"></i>
+      </button>
+    </div>
+  </header>
+
+  <!-- 메인 전광판 바디 -->
+  <main class="flex-1 grid grid-cols-2 p-6 gap-6 relative">
+    
+    <!-- 중앙 VS 세퍼레이터 -->
+    <div class="absolute inset-y-0 left-1/2 -translate-x-1/2 flex flex-col items-center justify-center z-10 pointer-events-none">
+      <div class="w-px h-full bg-slate-800/80"></div>
+      <div class="absolute bg-slate-950 border-2 border-slate-800 rounded-2xl px-4 py-2 font-black text-sm tracking-widest text-slate-400 shadow-2xl">
+        VS
+      </div>
+    </div>
+
+    <!-- 좌측 팀 (Home or Away) -->
+    <div id="dispCardLeft" class="bg-gradient-to-b from-slate-900/90 to-slate-950 rounded-3xl border-2 border-slate-800/90 p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+      <div id="dispColorBarLeft" class="absolute top-0 left-0 right-0 h-3 bg-emerald-500"></div>
+
+      <!-- 상단 팀 헤더 -->
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span id="dispServeBadgeLeft" class="hidden items-center text-xs font-black px-3 py-1 rounded-full bg-amber-400 text-slate-950 animate-serve-pulse">
+              <i data-lucide="volleyball" class="w-4 h-4 mr-1"></i> SERVE
+            </span>
+            <span id="dispSchoolLeft" class="text-sm text-slate-400 font-bold">소속</span>
+          </div>
+          <h2 id="dispTeamNameLeft" class="text-3xl sm:text-5xl font-black text-white mt-1.5 tracking-tight">
+            홈팀
+          </h2>
+        </div>
+
+        <!-- 세트 스코어 램프 -->
+        <div class="flex items-center space-x-2 bg-slate-950/80 px-4 py-2 rounded-2xl border border-slate-800">
+          <span class="text-xs font-bold text-slate-400 mr-1">SET WON</span>
+          <div id="dispSetLampLeft_1" class="w-4 h-4 rounded-full border-2 border-emerald-500 bg-transparent"></div>
+          <div id="dispSetLampLeft_2" class="w-4 h-4 rounded-full border-2 border-emerald-500 bg-transparent"></div>
+        </div>
+      </div>
+
+      <!-- 선수 명단 오버레이 (좌측) -->
+      <div id="dispRosterOverlayLeft" class="hidden bg-slate-950/95 border border-slate-800 rounded-2xl p-4 my-2 z-20">
+        <h4 class="text-xs font-bold text-slate-400 mb-2">출전 선수 라인업</h4>
+        <div id="dispRosterListLeft" class="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <!-- 메인 스코어 (초대형) -->
+      <div class="flex-1 flex items-center justify-center">
+        <div id="dispScoreLeft" class="led-digit text-[160px] sm:text-[220px] md:text-[280px] font-bold text-white tracking-tight glow-emerald">
+          0
+        </div>
+      </div>
+
+      <!-- 하단 작전타임 램프 -->
+      <div class="flex items-center justify-between border-t border-slate-800/80 pt-4">
+        <div class="flex items-center space-x-3">
+          <span class="text-xs font-bold text-slate-400">TIMEOUT</span>
+          <div id="dispTimeoutLampLeft_1" class="w-3.5 h-3.5 rounded-full border-2 border-amber-400 bg-transparent"></div>
+          <div id="dispTimeoutLampLeft_2" class="w-3.5 h-3.5 rounded-full border-2 border-amber-400 bg-transparent"></div>
+        </div>
+        <div id="dispSetDetailLeft" class="text-xs text-slate-400 font-mono"></div>
+      </div>
+    </div>
+
+    <!-- 우측 팀 (Away or Home) -->
+    <div id="dispCardRight" class="bg-gradient-to-b from-slate-900/90 to-slate-950 rounded-3xl border-2 border-slate-800/90 p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden">
+      <div id="dispColorBarRight" class="absolute top-0 left-0 right-0 h-3 bg-blue-500"></div>
+
+      <!-- 상단 팀 헤더 -->
+      <div class="flex items-start justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span id="dispServeBadgeRight" class="hidden items-center text-xs font-black px-3 py-1 rounded-full bg-amber-400 text-slate-950 animate-serve-pulse">
+              <i data-lucide="volleyball" class="w-4 h-4 mr-1"></i> SERVE
+            </span>
+            <span id="dispSchoolRight" class="text-sm text-slate-400 font-bold">소속</span>
+          </div>
+          <h2 id="dispTeamNameRight" class="text-3xl sm:text-5xl font-black text-white mt-1.5 tracking-tight">
+            원정팀
+          </h2>
+        </div>
+
+        <!-- 세트 스코어 램프 -->
+        <div class="flex items-center space-x-2 bg-slate-950/80 px-4 py-2 rounded-2xl border border-slate-800">
+          <span class="text-xs font-bold text-slate-400 mr-1">SET WON</span>
+          <div id="dispSetLampRight_1" class="w-4 h-4 rounded-full border-2 border-blue-500 bg-transparent"></div>
+          <div id="dispSetLampRight_2" class="w-4 h-4 rounded-full border-2 border-blue-500 bg-transparent"></div>
+        </div>
+      </div>
+
+      <!-- 선수 명단 오버레이 (우측) -->
+      <div id="dispRosterOverlayRight" class="hidden bg-slate-950/95 border border-slate-800 rounded-2xl p-4 my-2 z-20">
+        <h4 class="text-xs font-bold text-slate-400 mb-2">출전 선수 라인업</h4>
+        <div id="dispRosterListRight" class="grid grid-cols-2 gap-1.5 max-h-48 overflow-y-auto"></div>
+      </div>
+
+      <!-- 메인 스코어 (초대형) -->
+      <div class="flex-1 flex items-center justify-center">
+        <div id="dispScoreRight" class="led-digit text-[160px] sm:text-[220px] md:text-[280px] font-bold text-white tracking-tight glow-blue">
+          0
+        </div>
+      </div>
+
+      <!-- 하단 작전타임 램프 -->
+      <div class="flex items-center justify-between border-t border-slate-800/80 pt-4">
+        <div class="flex items-center space-x-3">
+          <span class="text-xs font-bold text-slate-400">TIMEOUT</span>
+          <div id="dispTimeoutLampRight_1" class="w-3.5 h-3.5 rounded-full border-2 border-amber-400 bg-transparent"></div>
+          <div id="dispTimeoutLampRight_2" class="w-3.5 h-3.5 rounded-full border-2 border-amber-400 bg-transparent"></div>
+        </div>
+        <div id="dispSetDetailRight" class="text-xs text-slate-400 font-mono"></div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- 하단 세트 히스토리 바 -->
+  <footer class="bg-slate-950 border-t border-slate-800/80 px-8 py-3 flex items-center justify-between text-sm">
+    <div class="text-[11px] text-slate-500 font-medium">
+      2026 양평 사제동행 배구대회
+    </div>
+    <div id="dispSetHistoryBar" class="flex items-center space-x-6"></div>
+    <div class="text-[11px] text-slate-500">
+      제작: <span class="text-slate-400 font-semibold">양평초등학교 강인한</span>
+    </div>
+  </footer>
+
+  <script src="js/sound.js"></script>
+  <script src="js/storage.js"></script>
+  <script>
+    let showRoster = false;
+
+    function toggleDisplayRoster() {
+      showRoster = !showRoster;
+      const overlayL = document.getElementById('dispRosterOverlayLeft');
+      const overlayR = document.getElementById('dispRosterOverlayRight');
+      const scoreL = document.getElementById('dispScoreLeft');
+      const scoreR = document.getElementById('dispScoreRight');
+
+      if (showRoster) {
+        overlayL?.classList.remove('hidden');
+        overlayR?.classList.remove('hidden');
+        if (scoreL) scoreL.className = "led-digit text-[100px] font-bold text-white tracking-tight glow-emerald";
+        if (scoreR) scoreR.className = "led-digit text-[100px] font-bold text-white tracking-tight glow-blue";
+      } else {
+        overlayL?.classList.add('hidden');
+        overlayR?.classList.add('hidden');
+        if (scoreL) scoreL.className = "led-digit text-[160px] sm:text-[220px] md:text-[280px] font-bold text-white tracking-tight glow-emerald";
+        if (scoreR) scoreR.className = "led-digit text-[160px] sm:text-[220px] md:text-[280px] font-bold text-white tracking-tight glow-blue";
+      }
+    }
+
+    // 전광판 렌더러
+    function renderDisplay() {
+      const data = window.storageManager.loadData();
+      const match = data.matches.find(m => m.id === data.activeMatchId) || data.matches[0];
+      if (!match) return;
+
+      const home = data.teams.find(t => t.id === match.homeTeamId) || { name: "홈팀", school: "-", primaryColor: "#059669", players: [] };
+      const away = data.teams.find(t => t.id === match.awayTeamId) || { name: "원정팀", school: "-", primaryColor: "#2563eb", players: [] };
+
+      // 메타 정보
+      document.getElementById('dispMatchRound').innerText = match.round || "리그전";
+      document.getElementById('dispMatchCourt').innerText = `${match.court || '물맑은 메인코트'} (${match.time || ''})`;
+      document.getElementById('dispSetNumber').innerText = `SET ${match.currentSet || 1}`;
+
+      // 듀스 체크
+      const hScore = match.currentPoints?.home || 0;
+      const aScore = match.currentPoints?.away || 0;
+      const deuceBadge = document.getElementById('dispDeuceBadge');
+      const isFinalSet = (match.currentSet || 1) >= 3;
+      const targetPoint = isFinalSet ? (data.settings.finalSetPoints || 15) : (data.settings.setPoints || 25);
+      if (hScore >= (targetPoint - 1) && aScore >= (targetPoint - 1)) {
+        deuceBadge.classList.remove('hidden');
+      } else {
+        deuceBadge.classList.add('hidden');
+      }
+
+      // 좌/우 렌더링
+      renderTeam('Left', home, hScore, match.homeSetsWon || 0, match.timeouts?.home || 0, match.server === 'home');
+      renderTeam('Right', away, aScore, match.awaySetsWon || 0, match.timeouts?.away || 0, match.server === 'away');
+
+      // 세트 히스토리
+      const historyBar = document.getElementById('dispSetHistoryBar');
+      if (historyBar) {
+        historyBar.innerHTML = (match.sets || []).map((s, idx) => `
+          <div class="px-3.5 py-1 rounded-xl bg-slate-900 border border-slate-800 text-xs">
+            <span class="text-slate-500 font-bold mr-1.5">${idx+1}SET</span>
+            <span class="font-mono font-bold text-amber-400">${s.home} : ${s.away}</span>
+          </div>
+        `).join('');
+      }
+
+      if (window.lucide) window.lucide.createIcons();
+    }
+
+    function renderTeam(side, team, score, setsWon, timeouts, isServing) {
+      document.getElementById(`dispTeamName${side}`).innerText = team.name;
+      document.getElementById(`dispSchool${side}`).innerText = team.school;
+      document.getElementById(`dispScore${side}`).innerText = score;
+      document.getElementById(`dispColorBar${side}`).style.backgroundColor = team.primaryColor || '#059669';
+
+      // 서브권
+      const serveBadge = document.getElementById(`dispServeBadge${side}`);
+      if (isServing) {
+        serveBadge.classList.remove('hidden');
+        serveBadge.classList.add('inline-flex');
+      } else {
+        serveBadge.classList.add('hidden');
+        serveBadge.classList.remove('inline-flex');
+      }
+
+      // 세트 선취 램프
+      const lamp1 = document.getElementById(`dispSetLamp${side}_1`);
+      const lamp2 = document.getElementById(`dispSetLamp${side}_2`);
+      if (lamp1) {
+        lamp1.className = `w-4 h-4 rounded-full border-2 border-emerald-400 ${setsWon >= 1 ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]' : 'bg-transparent'}`;
+      }
+      if (lamp2) {
+        lamp2.className = `w-4 h-4 rounded-full border-2 border-emerald-400 ${setsWon >= 2 ? 'bg-emerald-400 shadow-[0_0_12px_rgba(52,211,153,0.8)]' : 'bg-transparent'}`;
+      }
+
+      // 타임아웃 램프
+      const tLamp1 = document.getElementById(`dispTimeoutLamp${side}_1`);
+      const tLamp2 = document.getElementById(`dispTimeoutLamp${side}_2`);
+      if (tLamp1) {
+        tLamp1.className = `w-3.5 h-3.5 rounded-full border-2 border-amber-400 ${timeouts >= 1 ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]' : 'bg-transparent'}`;
+      }
+      if (tLamp2) {
+        tLamp2.className = `w-3.5 h-3.5 rounded-full border-2 border-amber-400 ${timeouts >= 2 ? 'bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.8)]' : 'bg-transparent'}`;
+      }
+
+      // 선수 목록 오버레이 리스트 채우기
+      const rosterList = document.getElementById(`dispRosterList${side}`);
+      if (rosterList) {
+        rosterList.innerHTML = (team.players || []).map(p => `
+          <div class="flex items-center space-x-1.5 text-[11px] p-1 bg-slate-900 rounded border border-slate-800">
+            <span class="font-mono font-bold text-amber-400">#${p.number}</span>
+            <span class="font-semibold text-white truncate">${p.name}</span>
+            <span class="text-slate-400 text-[10px] ml-auto">${p.position}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(err => console.log(err));
+      } else {
+        document.exitFullscreen().catch(err => console.log(err));
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      renderDisplay();
+      window.storageManager.onBroadcast((msg) => {
+        renderDisplay();
+      });
+      setInterval(renderDisplay, 1000);
+
+      window.addEventListener('keydown', (e) => {
+        if (e.key.toUpperCase() === 'R') {
+          toggleDisplayRoster();
+        }
+      });
+    });
+  </script>
+</body>
+</html>
